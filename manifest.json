@@ -1,0 +1,26 @@
+{
+    "name": "Chrome Ext",
+    "manifest_version": 2,
+    "description": "タブの情報を表示します",
+    "version": "1.0",
+    "content_scripts": [
+        {
+            "matches":  [ "https://twitter.com/*"],
+            "all_frames": true,
+            "js": [
+                "main.js",
+            ],
+            "css":[
+                "materialized.min.css",
+                "icon.css"
+            ]
+        }
+    ],
+    "background": {
+        "scripts": ["background.js"]
+      },
+    "permissions": [
+      "tabs",
+      "contextMenus"
+    ]
+  }
