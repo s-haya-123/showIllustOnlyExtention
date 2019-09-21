@@ -8,17 +8,19 @@
             "matches":  [ "https://twitter.com/*"],
             "all_frames": true,
             "js": [
-                "main.js",
+                "bundle.js"
             ],
             "css":[
-                "materialized.min.css",
-                "icon.css"
             ]
         }
     ],
     "background": {
-        "scripts": ["background.js"]
-      },
+      "scripts": []
+    },
+    "web_accessible_resources": [
+      "model/*",
+      "sample.json"
+    ],
     "permissions": [
       "tabs",
       "contextMenus"

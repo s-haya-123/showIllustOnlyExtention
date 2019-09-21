@@ -8,6 +8,8 @@
     "build": "webpack --mode=production"
   },
   "devDependencies": {
+    "@tensorflow/tfjs": "^1.2.9",
+    "@types/chrome": "^0.0.88",
     "ts-loader": "^6.1.2",
     "typescript": "^3.6.3",
     "webpack": "^4.40.2",
