@@ -1,28 +1,36 @@
 {
-    "name": "Chrome Ext",
-    "manifest_version": 2,
-    "description": "タブの情報を表示します",
-    "version": "1.0",
-    "content_scripts": [
-        {
-            "matches":  [ "https://twitter.com/*"],
-            "all_frames": true,
-            "js": [
-                "bundle.js"
-            ],
-            "css":[
-            ]
-        }
-    ],
-    "background": {
-      "scripts": []
-    },
-    "web_accessible_resources": [
-      "model/*",
-      "sample.json"
-    ],
-    "permissions": [
-      "tabs",
-      "contextMenus"
-    ]
-  }
+  "name": "Chrome Ext",
+  "manifest_version": 2,
+  "description": "タブの情報を表示します",
+  "version": "1.0",
+  "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
+  "content_scripts": [
+      {
+          "matches":  [ "https://twitter.com/*"],
+          "all_frames": true,
+          "js": [
+              "bundle.js"
+          ],
+          "css":[
+          ]
+      }
+  ],
+  "background": {
+    "scripts": ["background.js"],
+    "persistent": true
+  },
+  "web_accessible_resources": [
+    "model/*",
+    "sample.json"
+  ],
+  "permissions": [
+    "activeTab",
+    "declarativeContent",
+    "webRequest",
+    "webRequestBlocking",
+    "<all_urls>",
+    "storage",
+    "tabs",
+    "*://*.twitter.com/*"
+  ]
+}
