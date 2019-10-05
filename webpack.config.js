@@ -1,11 +1,14 @@
 const path = require('path');
+
 module.exports = {
     // モジュールバンドルを行う起点となるファイルの指定
     // 指定できる値としては、ファイル名の文字列や、それを並べた配列やオブジェクト
     // 下記はオブジェクトとして指定した例 
     entry: {
         bundle: './src/index.ts',
-        background: './src/background.ts'
+        background: './src/background.ts',
+        worker: './src/worker.ts',
+        testWorker: './src/testWorker.ts'
     },  
     output: {
         // モジュールバンドルを行った結果を出力する場所やファイル名の指定
@@ -29,6 +32,10 @@ module.exports = {
             {
                 // 拡張子が.tsで終わるファイルに対して、TypeScriptコンパイラを適用する
                 test:/\.ts$/,loader:'ts-loader'
+            },
+            {
+                test: /\.testWorker\.ts$/,
+                use:  {loader: 'worker-loader',options: {inline: true, fallback: false }}
             }
         ]
     }

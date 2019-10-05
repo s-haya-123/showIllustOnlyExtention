@@ -9,19 +9,17 @@
           "matches":  [ "https://twitter.com/*"],
           "all_frames": true,
           "js": [
-              "bundle.js"
+              "bundle.js", "worker.js"
           ],
           "css":[
           ]
       }
   ],
-  "background": {
-    "scripts": ["background.js"],
-    "persistent": true
-  },
   "web_accessible_resources": [
     "model/*",
-    "sample.json"
+    "sample.json",
+    "worker.js",
+    "testWorker.js"
   ],
   "permissions": [
     "activeTab",
