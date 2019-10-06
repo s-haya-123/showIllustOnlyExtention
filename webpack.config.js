@@ -32,10 +32,6 @@ module.exports = {
             {
                 // 拡張子が.tsで終わるファイルに対して、TypeScriptコンパイラを適用する
                 test:/\.ts$/,loader:'ts-loader'
-            },
-            {
-                test: /\.testWorker\.ts$/,
-                use:  {loader: 'worker-loader',options: {inline: true, fallback: false }}
             }
         ]
     }

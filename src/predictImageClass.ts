@@ -86,3 +86,13 @@ export async function predictImage(model:tf.LayersModel, img: HTMLImageElement):
     return;
 }
 
+export async function predictImageCanvas(model:tf.LayersModel, canvas: OffscreenCanvas) {
+    const img = loadImg(canvas as any);
+    const predicts = await (model.predict(img as any) as tf.Tensor<tf.Rank>).array();
+    if(is2dArray(predicts)) {
+        return predicts.map(classify);
+    } else {
+        return;
+    }
+}
+

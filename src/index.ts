@@ -1,6 +1,7 @@
 import * as tf from '@tensorflow/tfjs';
 import { predictImages, loadImage } from './predictImageClass';
 import * as comlink from "comlink";
+import { PredictionClass } from './worker';
 let model: tf.LayersModel | undefined;
 
 console.log('start')
@@ -12,25 +13,14 @@ setTimeout( ()=>{
   },1000);
 
 async function load(imgs: string[]) {
-
-
     const worker = await fetch(chrome.extension.getURL('worker.js'));
     const js = await worker.text();
     const blob = new Blob([js], {type: "text/javascript"});
     const url = URL.createObjectURL(blob)
     const workerClass: any = comlink.wrap(new Worker(url));
-    const instance: any = await new workerClass();
-    
+    const instance:PredictionClass = await new workerClass();
+    await instance.init(chrome.extension.getURL('model/model.json'));
 
-    console.log(await instance.predictImages(imgs.filter((img,i)=>!!img && i < 10),chrome.extension.getURL('model/model.json')));
+    console.log(await instance.predictImages(imgs.filter((img,i)=>!!img && i < 10)));
 }
-async function workertest() {
-    const worker = await fetch(chrome.extension.getURL('worker.js'));
-    const js = await worker.text();
-    const blob = new Blob([js], {type: "text/javascript"});
-    const url = URL.createObjectURL(blob)
-    const workerClass: any = comlink.wrap(new Worker(url));
-    const instance: any = await new workerClass();
-    
-    console.log(await instance.predictImages("message",chrome.extension.getURL('model/model.json')));
-}
+
