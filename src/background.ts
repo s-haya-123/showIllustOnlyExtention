@@ -49,3 +49,13 @@ tf.loadLayersModel('./model/model.json').then(m => {
 //                   }
                   
 //     });
+
+chrome.runtime.onMessage.addListener(
+    function(request, sender, sendResponse) {
+      console.log(sender.tab ?
+                  "from a content script:" + sender.tab.url :
+                  "from the extension");
+    const worker = new Worker(chrome.extension.getURL('testWorker.js'));
+      if (request.greeting == "hello")
+        sendResponse({farewell: worker});
+    });
