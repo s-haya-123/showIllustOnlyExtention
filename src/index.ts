@@ -1,29 +1,27 @@
 import * as tf from '@tensorflow/tfjs';
-const xhr = new XMLHttpRequest();
+import { predictImages, loadImage } from './predictImageClass';
+import * as comlink from "comlink";
+import { PredictionClass } from './worker';
+let model: tf.LayersModel | undefined;
 
-// xhr.open('GET', chrome.extension.getURL('model/model.json'), true);
+console.log('start')
 
-// xhr.onreadystatechange = () =>{
-//     if(xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
-//         const model = JSON.parse(xhr.responseText);
-//         tf.loadLayersModel(model).then(m => { 
-//             console.log(m);
-//         });
-//     } else {
-//         console.log(xhr);
-//     }
-// }
-// xhr.send();
 
-function loadImg(img: HTMLImageElement): tf.Tensor<tf.Rank> | undefined {
-    const resizeImg = tf.image.resizeBilinear(tf.browser.fromPixels(img,3),[224,224]);
-    return tf.tidy(() => {
-        return resizeImg.expandDims(0);
-      }).cast('float32').div(tf.scalar(255));
+setTimeout( ()=>{
+      const imgs = Array.from(document.images).map(image=>image.src);
+      load(imgs);
+  },1000);
+
+async function load(imgs: string[]) {
+    const worker = await fetch(chrome.extension.getURL('worker.js'));
+    const js = await worker.text();
+    const blob = new Blob([js], {type: "text/javascript"});
+    const url = URL.createObjectURL(blob)
+    const workerClass: any = comlink.wrap(new Worker(url));
+    const instance:PredictionClass = await new workerClass();
+    await instance.init(chrome.extension.getURL('model/model.json'));
+
+    console.log(await instance.predictImages(imgs.filter((img,i)=>!!img && i < 10)));
+    console.log(await instance.predictImages(imgs.filter((img,i)=>!!img && (i >= 10 && i < 20))));
 }
 
-tf.loadLayersModel('chrome-extension://oleakhblomlaelndnfgmakgmoeomcpkb/model/model.json').then(m => { 
-    console.log(m);
-    const batched = loadImg(document.body.querySelectorAll( 'img' ) [4])
-    !!batched ? (m.predict(batched) as any).print():{};
-});
