@@ -22,5 +22,6 @@ async function load(imgs: string[]) {
     await instance.init(chrome.extension.getURL('model/model.json'));
 
     console.log(await instance.predictImages(imgs.filter((img,i)=>!!img && i < 10)));
+    console.log(await instance.predictImages(imgs.filter((img,i)=>!!img && (i >= 10 && i < 20))));
 }
 
