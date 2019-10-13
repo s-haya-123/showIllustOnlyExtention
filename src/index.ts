@@ -2,14 +2,15 @@ import * as tf from '@tensorflow/tfjs';
 import { predictImages, loadImage } from './predictImageClass';
 import * as comlink from "comlink";
 import { PredictionClass } from './worker';
+import { Message } from './background';
 
 console.log('start');
-
-setTimeout( ()=>{
-      const imgs = Array.from(document.images).map(image=>image.src);
-    //   load(imgs);
-  },5000);
-
+chrome.runtime.onMessage.addListener((message:Message)=>{
+    if( message.action === 'predict') {
+        const imgs = Array.from(document.images).map(image=>image.src);
+        //   load(imgs);
+    }
+})
 async function load(imgs: string[]) {
     const worker = await fetch(chrome.extension.getURL('worker.js'));
     const js = await worker.text();
