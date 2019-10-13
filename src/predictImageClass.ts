@@ -11,7 +11,7 @@ export async function loadImage(src: string): Promise<HTMLImageElement | null> {
             resolve(null);
         };
         img.onload = function(e) {
-            if ((img.height && img.height > 128) || (img.width && img.width > 128)) {
+            if (img && (img.height > 128 && img.width > 128)) {
             // Set image size for tf!
             img.width = imgSize;
             img.height = imgSize;
