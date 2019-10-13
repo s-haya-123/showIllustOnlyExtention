@@ -7,8 +7,8 @@ console.log('start');
 
 setTimeout( ()=>{
       const imgs = Array.from(document.images).map(image=>image.src);
-      load(imgs);
-  },2000);
+    //   load(imgs);
+  },5000);
 
 async function load(imgs: string[]) {
     const worker = await fetch(chrome.extension.getURL('worker.js'));
@@ -23,8 +23,8 @@ async function load(imgs: string[]) {
     await instance.loadImage(imgs);
     console.log('load done');
     console.time('load img');
-    // console.log(await instance.predictImages());
-    console.log(await instance.predictImage(1));
+    console.log(await instance.predictImages());
+    // console.log(await instance.predictImage(1));
     console.timeEnd('load img');
     // console.log(await instance.predictImages(imgs.filter((img,i)=>!!img && i < 1)));
     // console.log(await instance.predictImages(imgs.filter((img)=>!!img)));

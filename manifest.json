@@ -6,29 +6,32 @@
   "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
   "content_scripts": [
       {
-          "matches":  [ "https://twitter.com/*"],
+          "matches": [ "https://twitter.com/*"],
           "all_frames": true,
           "js": [
-              "bundle.js", "worker.js"
+              "bundle.js"
           ],
           "css":[
           ]
       }
   ],
+  "background": {
+    "scripts": ["background.js"]
+  },
   "web_accessible_resources": [
     "model/*",
     "sample.json",
-    "worker.js",
-    "testWorker.js"
+    "worker.js"
   ],
   "permissions": [
+    "contextMenus",
     "activeTab",
     "declarativeContent",
     "webRequest",
     "webRequestBlocking",
-    "<all_urls>",
     "storage",
     "tabs",
-    "*://*.twitter.com/*"
+    "*://*.twitter.com/*",
+    "*://*.twimg.com/*"
   ]
 }
