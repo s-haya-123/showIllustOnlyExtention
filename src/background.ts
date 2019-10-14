@@ -8,7 +8,7 @@ chrome.contextMenus.create({
   type: "normal",
   onclick: function (_, tabs) {
         tabs.id &&
-        chrome.tabs.sendMessage(tabs.id, {action: 'predict'} as Action);
+        chrome.tabs.sendMessage(tabs.id, {action: 'predict'} as Message);
   },
   documentUrlPatterns: ["https://twitter.com/*"],
 });
