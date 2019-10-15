@@ -2,24 +2,33 @@ import * as comlink from "comlink";
 import { PredictionClass, Predict } from './worker';
 import { Message } from './background';
 
+
+let illustDic: Predict[] = [];
+chrome.storage.sync.get(['dictionary'], function(result) {
+    if(result.dictionary) {
+        illustDic = result.dictionary;
+    }
+});
 console.log('start');
 chrome.runtime.onMessage.addListener(async (message:Message)=>{
     if( message.action === 'predict') {
         const imgs = Array.from(document.images)
         const medias = imgs.map(image=>image.src).filter(src=> src.match(/media/));
         const [target,dictionary]: [ string[], Predict[]] = medias.reduce((acc,media)=>{
-            const predict = message.dic.filter(d=>d.src === media);
+            const predict = illustDic.filter(dic=>dic.src === media);
             return predict.length > 0
             ? [ acc[0],[...acc[1], ...predict]]
             : [ [...acc[0],media], acc[1]];
         }, [ [] as string[], [] as Predict[]]);
-        const predicts = target.length === 0 ? await predict(target) : [];
+        const predicts = target.length > 0 ? await predict(target) : [];
         if(predicts) {
-            setDisplayNoneOnNotIllustOnTwitter(imgs,predicts.concat(dictionary));
-            chrome.runtime.sendMessage(predicts);
+            console.log(predicts,target);
+            const allImageData = predicts.concat(dictionary)
+            setDisplayNoneOnNotIllustOnTwitter(imgs,allImageData);
+            chrome.storage.sync.set({dictionary: allImageData});
         }
     }
-})
+});
 function setDisplayNoneOnNotIllustOnTwitter(imgs: HTMLImageElement[], predicts: Predict[]) {
     Array.from(imgs).forEach(img=>{
         if( predicts.filter(predict=>predict.src === img.src

@@ -1,8 +1,7 @@
 import { Predict } from './worker';
 
 export interface Message {
-  action: 'predict',
-  dic: Predict[]
+  action: 'predict'
 };
 let illustDic: Predict[] = [];
 chrome.contextMenus.create({
@@ -11,7 +10,7 @@ chrome.contextMenus.create({
   type: "normal",
   onclick: (_, tabs) => {
         tabs.id &&
-        chrome.tabs.sendMessage(tabs.id, {action: 'predict', dic: illustDic} as Message)
+        chrome.tabs.sendMessage(tabs.id, {action: 'predict'} as Message)
   },
   documentUrlPatterns: ["https://twitter.com/*"],
 });
