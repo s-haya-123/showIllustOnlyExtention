@@ -48,7 +48,6 @@ export class PredictionClass {
         const imgBlobs = await Promise.all(imgs.map(async img=> await (await fetch(img)).blob()));
         const bitmaps = await Promise.all(imgBlobs.map(async blob=>
             blob.type.match(/svg/) ? undefined : await createImageBitmap(blob) ));
-            console.log(bitmaps);
         this.imageDatas = await bitmaps
         .map((bitmap,index)=> {return {bitmap,index}})
         .filter(

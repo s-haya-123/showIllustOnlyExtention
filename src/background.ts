@@ -1,14 +1,22 @@
+import { Predict } from './worker';
 
 export interface Message {
-  action: 'predict'
+  action: 'predict',
+  dic: Predict[]
 };
+let illustDic: Predict[] = [];
 chrome.contextMenus.create({
   title: "イラストのみを表示",
   contexts: ["all"],
   type: "normal",
-  onclick: function (_, tabs) {
+  onclick: (_, tabs) => {
         tabs.id &&
-        chrome.tabs.sendMessage(tabs.id, {action: 'predict'} as Message);
+        chrome.tabs.sendMessage(tabs.id, {action: 'predict', dic: illustDic} as Message)
   },
   documentUrlPatterns: ["https://twitter.com/*"],
+});
+
+chrome.runtime.onMessage.addListener((dictionary: Predict[])=>{
+  illustDic=[...illustDic,...dictionary];
+  console.log(illustDic);
 });
