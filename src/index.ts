@@ -9,7 +9,6 @@ chrome.storage.sync.get(['dictionary'], function(result) {
         illustDic = result.dictionary;
     }
 });
-console.log('start');
 chrome.runtime.onMessage.addListener(async (message:Message)=>{
     if( message.action === 'predict') {
         const imgs = Array.from(document.images)
@@ -21,10 +20,9 @@ chrome.runtime.onMessage.addListener(async (message:Message)=>{
             : [ [...acc[0],media], acc[1]];
         }, [ [] as string[], [] as Predict[]]);
         const predicts = target.length > 0 ? await predict(target) : [];
+        const allImageData = predicts ? predicts.concat(dictionary) : dictionary;
+        setDisplayNoneOnNotIllustOnTwitter(imgs,allImageData);
         if(predicts) {
-            console.log(predicts,target);
-            const allImageData = predicts.concat(dictionary)
-            setDisplayNoneOnNotIllustOnTwitter(imgs,allImageData);
             chrome.storage.sync.set({dictionary: allImageData});
         }
     }

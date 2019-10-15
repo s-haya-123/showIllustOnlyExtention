@@ -19,8 +19,9 @@ export class PredictionClass {
         this.model = await tf.loadLayersModel(url);
     }
     async predictImages(): Promise<Predict[] | undefined> {
+        
         const imageDatas = this.imageDatas;
-        if(this.model && imageDatas) {
+        if(this.model && imageDatas && imageDatas.length > 0) {
             const predicts = await predictImageCanvases(this.model, imageDatas.map(imageData=>imageData.canvas));
             return predicts ? predicts.map((predict,index)=> {
                 return {
