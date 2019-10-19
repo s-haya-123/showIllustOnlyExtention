@@ -1,7 +1,8 @@
 import * as comlink from "comlink";
 import { PredictionClass, Predict } from './worker';
 import { Message } from './background';
-
+import { Subject } from 'rxjs';
+import { filter, scan } from 'rxjs/operators'
 
 let illustDic: Predict[] = [];
 chrome.storage.sync.get(['dictionary'], function(result) {
@@ -9,24 +10,47 @@ chrome.storage.sync.get(['dictionary'], function(result) {
         illustDic = result.dictionary;
     }
 });
+
+const image$ = new Subject<string>();
+
+image$.pipe(
+    filter(src=> !!src.match(/media/)),
+    scan((acc,cur)=>acc.length >= 10 ? [cur] : [...acc,cur],[] as string[]),
+    filter((imgs)=>imgs.length >= 10)
+).subscribe(predictImages);
+
+
 chrome.runtime.onMessage.addListener(async (message:Message)=>{
     if( message.action === 'predict') {
-        const imgs = Array.from(document.images)
+        const imgs = Array.from(document.images);
         const medias = imgs.map(image=>image.src).filter(src=> src.match(/media/));
-        const [target,dictionary]: [ string[], Predict[]] = medias.reduce((acc,media)=>{
-            const predict = illustDic.filter(dic=>dic.src === media);
-            return predict.length > 0
-            ? [ acc[0],[...acc[1], ...predict]]
-            : [ [...acc[0],media], acc[1]];
-        }, [ [] as string[], [] as Predict[]]);
-        const predicts = target.length > 0 ? await predict(target) : [];
-        const allImageData = predicts ? predicts.concat(dictionary) : dictionary;
-        setDisplayNoneOnNotIllustOnTwitter(imgs,allImageData);
-        if(predicts) {
-            chrome.storage.sync.set({dictionary: allImageData});
-        }
+        predictImages(medias);
+    }
+    if( message.action === 'stream' && message.img) {
+        image$.next(message.img);
     }
 });
+async function predictImages(medias: string[]) {
+    console.time('predict');
+    const [target,dictionary]: [ string[], Predict[]] = medias.reduce((acc,media)=>{
+        const predict = illustDic.filter(dic=>dic.src === media);
+        return predict.length > 0
+        ? [ acc[0],[...acc[1], ...predict]]
+        : [ [...acc[0],media], acc[1]];
+    }, [ [] as string[], [] as Predict[]]);
+
+    const predicts = target.length > 0 ? await predict(target) : [];
+
+    console.log(medias,predicts,illustDic);
+    const allImageData = predicts ? predicts.concat(dictionary) : dictionary;
+    setDisplayNoneOnNotIllustOnTwitter(Array.from(document.images),allImageData);
+    if(predicts) {
+        illustDic = allImageData;
+        chrome.storage.sync.set({dictionary: illustDic});
+    }
+    console.timeEnd('predict');
+}
+
 function setDisplayNoneOnNotIllustOnTwitter(imgs: HTMLImageElement[], predicts: Predict[]) {
     Array.from(imgs).forEach(img=>{
         if( predicts.filter(predict=>predict.src === img.src

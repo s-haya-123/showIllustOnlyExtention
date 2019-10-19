@@ -18,6 +18,7 @@
     "worker-plugin": "^3.2.0"
   },
   "dependencies": {
+    "rxjs": "^6.5.3",
     "worker-loader": "^2.0.0"
   }
 }

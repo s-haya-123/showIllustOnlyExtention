@@ -1,9 +1,8 @@
-import { Predict } from './worker';
-
 export interface Message {
-  action: 'predict'
+  action: 'predict' | 'stream',
+  img?: string
 };
-let illustDic: Predict[] = [];
+
 chrome.contextMenus.create({
   title: "イラストのみを表示",
   contexts: ["all"],
@@ -15,7 +14,17 @@ chrome.contextMenus.create({
   documentUrlPatterns: ["https://twitter.com/*"],
 });
 
-chrome.runtime.onMessage.addListener((dictionary: Predict[])=>{
-  illustDic=[...illustDic,...dictionary];
-  console.log(illustDic);
+const requestListner = (tabId: number) => {
+  return async (req: chrome.webRequest.WebResponseCacheDetails) => {
+    chrome.tabs.sendMessage(tabId, {action: 'stream', img: req.url} as Message)
+  }
+}
+let requestFunc: (req: chrome.webRequest.WebResponseCacheDetails) => void;
+chrome.tabs.onActivated.addListener(({tabId,windowId})=>{
+  chrome.webRequest.onCompleted.removeListener(requestFunc);
+  requestFunc = requestListner(tabId);
+  chrome.webRequest.onCompleted.addListener(requestFunc,
+    {
+      urls: ["*://*.twimg.com/*","*://*.twitter.com/*"], types: ["image"],tabId: tabId
+    })
 });
