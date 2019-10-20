@@ -1,5 +1,6 @@
+import { Message } from './background';
 export interface Message {
-  action: 'predict' | 'stream',
+  action: 'predict' | 'stream' | 'start_stream' | 'stop_stream',
   img?: string
 };
 
@@ -14,6 +15,26 @@ chrome.contextMenus.create({
   documentUrlPatterns: ["https://twitter.com/*"],
 });
 
+chrome.contextMenus.create({
+  title: "イラストのみを表示（常に）",
+  contexts: ["all"],
+  type: "normal",
+  onclick: (_,tabs)=>{
+    tabs.id &&
+    chrome.tabs.sendMessage(tabs.id, {action: 'start_stream'} as Message)
+  },
+  documentUrlPatterns: ["https://twitter.com/*"]
+});
+chrome.contextMenus.create({
+  title: "停止",
+  contexts: ["all"],
+  type: "normal",
+  onclick: (_,tabs)=>{
+    tabs.id &&
+    chrome.tabs.sendMessage(tabs.id, {action: 'stop_stream'} as Message)
+  },
+  documentUrlPatterns: ["https://twitter.com/*"]
+});
 const requestListner = (tabId: number) => {
   return async (req: chrome.webRequest.WebResponseCacheDetails) => {
     chrome.tabs.sendMessage(tabId, {action: 'stream', img: req.url} as Message)
