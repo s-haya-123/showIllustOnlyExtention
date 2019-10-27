@@ -30,9 +30,11 @@ start$.next(true);
 
 chrome.runtime.onMessage.addListener(async (message:Message)=>{
     if( message.action === 'predict') {
+        injectLoader();
         const imgs = Array.from(document.images);
         const medias = imgs.map(image=>image.src).filter(src=> src.match(/media/));
-        predictImages(medias);
+        await predictImages(medias);
+        deleteLoader();
     }
     if( message.action === 'stream' && message.img) {
         image$.next(message.img);
@@ -45,6 +47,20 @@ chrome.runtime.onMessage.addListener(async (message:Message)=>{
         streamingPredict.unsubscribe();
     }
 });
+function injectLoader() {
+    const wrapper = document.createElement('div');
+    wrapper.id = 'loader-wrapper';
+    wrapper.className = 'wrapper';
+    const loader = document.createElement('div');
+    loader.id = 'inject-loader';
+    loader.className = 'loader';
+    wrapper.appendChild(loader);
+    document.body.appendChild(wrapper);
+}
+function deleteLoader() {
+    const loader = document.getElementById('loader-wrapper');
+    loader && loader.remove();
+}
 async function predictImages(medias: string[]) {
     console.time('predict');
     const [target,dictionary]: [ string[], Predict[]] = medias.reduce((acc,media)=>{
