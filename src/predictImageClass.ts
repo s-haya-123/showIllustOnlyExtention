@@ -90,6 +90,7 @@ export async function predictImage(model:tf.LayersModel, img: HTMLImageElement):
 export async function predictImageCanvas(model:tf.LayersModel, canvas: OffscreenCanvas) {
     const img = loadImg(canvas as any);
     const predicts = await (model.predict(img as any) as tf.Tensor<tf.Rank>).array();
+    img && img.dispose();
     if(is2dArray(predicts)) {
         return predicts.map(classify);
     } else {
@@ -101,6 +102,8 @@ export async function predictImageCanvases(model:tf.LayersModel, canvases: (Offs
     const concatBatchedImgs = bathcedImgs.reduce((acc,current) => acc.concat(current));
     
     const predicts = await (model.predict(concatBatchedImgs as any) as tf.Tensor<tf.Rank>).array();
+    bathcedImgs && bathcedImgs.forEach( img => img.dispose());
+    concatBatchedImgs.dispose();
     if(is2dArray(predicts)) {
         return predicts.map(classify);
     } else {

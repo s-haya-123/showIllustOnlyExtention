@@ -3,7 +3,7 @@ import { PredictionClass, Predict } from './worker';
 import { Message } from './background';
 import { Subject, zip, timer, Subscription, ReplaySubject } from 'rxjs';
 import { filter, scan } from 'rxjs/operators'
-
+const length = 5;
 let illustDic: Predict[] = [];
 chrome.storage.sync.get(['dictionary'], function(result) {
     if(result.dictionary) {
@@ -20,13 +20,15 @@ timer(1000,1000).subscribe(_=>{
 const streaming$ = zip(
     image$.pipe(
         filter(src=> !!src.match(/media/)),
-        scan((acc,cur)=>acc.length >= 10 ? [cur] : [...acc,cur],[] as string[]),
-        filter((imgs)=>imgs.length >= 10)
+        scan((acc,cur)=>acc.length >= length ? [cur] : [...acc,cur],[] as string[]),
+        filter((imgs)=>imgs.length >= length)
     ),
     start$
 );
 let streamingPredict: Subscription;
 start$.next(true);
+let instance: PredictionClass;
+createInstance().then(i=>instance = i);
 
 chrome.runtime.onMessage.addListener(async (message:Message)=>{
     if( message.action === 'predict') {
@@ -37,6 +39,7 @@ chrome.runtime.onMessage.addListener(async (message:Message)=>{
         deleteLoader();
     }
     if( message.action === 'stream' && message.img) {
+        instance && message.img.match(/media/) && instance.addImage(message.img);
         image$.next(message.img);
     }
     if( message.action === 'start_stream' ){
@@ -62,25 +65,31 @@ function deleteLoader() {
     loader && loader.remove();
 }
 async function predictImages(medias: string[]) {
-    console.time('predict');
+    console.time('all');
+    console.time('reduce');
     const [target,dictionary]: [ string[], Predict[]] = medias.reduce((acc,media)=>{
         const predict = illustDic.filter(dic=>dic.src === media);
         return predict.length > 0
         ? [ acc[0],[...acc[1], ...predict]]
         : [ [...acc[0],media], acc[1]];
     }, [ [] as string[], [] as Predict[]]);
+    console.timeEnd('reduce');
+    console.time('predict_all');
+    const predicts = target.length > 0 ? await predict(target,instance) : [];
+    console.timeEnd('predict_all');
 
-    const predicts = target.length > 0 ? await predict(target) : [];
-
-    console.log(medias,predicts,dictionary,illustDic);
     const allImageData = !!predicts ? [...predicts, ...dictionary] : dictionary;
-    console.log(allImageData);
+    console.log(predicts);
+    console.time('set none');
     setDisplayNoneOnNotIllustOnTwitter(Array.from(document.images),allImageData);
+    console.timeEnd('set none');
+    console.time('storage');
     if(predicts) {
         illustDic = [...illustDic,...allImageData];
         chrome.storage.sync.set({dictionary: illustDic});
     }
-    console.timeEnd('predict');
+    console.timeEnd('storage');
+    console.timeEnd('all');
     start$.next(true);
 }
 
@@ -102,7 +111,8 @@ function searchParentElement(dom: HTMLElement): HTMLElement {
     }
     return target;
 }
-async function predict(imgs: string[]): Promise<Predict[] | undefined> {
+async function createInstance():Promise<PredictionClass> {
+    console.time('load');
     const worker = await fetch(chrome.extension.getURL('worker.js'));
     const js = await worker.text();
     const blob = new Blob([js], {type: "text/javascript"});
@@ -110,7 +120,18 @@ async function predict(imgs: string[]): Promise<Predict[] | undefined> {
     const workerClass: any = comlink.wrap(new Worker(url));
     const instance:PredictionClass = await new workerClass();
     await instance.init(chrome.extension.getURL('model/model.json'));
-    await instance.loadImage(imgs);
-    return instance.predictImages();
+    console.timeEnd('load');
+    return instance;
+}
+
+async function predict(imgs: string[], instance: PredictionClass): Promise<Predict[] | undefined>{
+    console.time('load_img');
+    // await instance.loadImage(imgs);
+    console.timeEnd('load_img');
+    console.time('predict');
+    const predicts = await instance.predictImages();
+    console.timeEnd('predict');
+    return predicts;
+
 }
 

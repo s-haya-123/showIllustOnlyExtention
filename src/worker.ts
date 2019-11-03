@@ -8,13 +8,17 @@ export interface Predict {
     predict: Picture;
     src: string;
 }
-export interface ImageData {
+export interface CanvasDict {
     src: string;
     canvas: OffscreenCanvas;
 }
+export interface ImageDict {
+    src: string;
+    image: ImageData
+};
 export class PredictionClass {
     model?: tf.LayersModel;
-    imageDatas?: ImageData[];
+    imageDatas?: CanvasDict[];
     async init(url: string) {
         this.model = await tf.loadLayersModel(url);
     }
@@ -23,6 +27,7 @@ export class PredictionClass {
         const imageDatas = this.imageDatas;
         if(this.model && imageDatas && imageDatas.length > 0) {
             const predicts = await predictImageCanvases(this.model, imageDatas.map(imageData=>imageData.canvas));
+            this.imageDatas = undefined;
             return predicts ? predicts.map((predict,index)=> {
                 return {
                     predict,
@@ -37,6 +42,7 @@ export class PredictionClass {
         const imageDatas = this.imageDatas;
         if(this.model && imageDatas && imageDatas[index]) {
             const predict = await predictImageCanvases(this.model,[imageDatas[index].canvas]);
+            this.imageDatas = undefined;
             return predict ? {
                 predict: predict[0],
                 src: imageDatas[index].src
@@ -64,11 +70,26 @@ export class PredictionClass {
             return {
                 src: imgs[index],
                 canvas
-            } as ImageData;
+            } as CanvasDict;
         }).filter(isNotEmpty);
         return;
     }
+    async addImage(img: string) {
+        const imgBlob = await (await fetch(img)).blob();
+        const bitmap = imgBlob.type.match(/svg/) ? undefined : await createImageBitmap(imgBlob);
+        if(bitmap) {
+            const canvas = new OffscreenCanvas(bitmap.width,bitmap.height);
+            const c = canvas.getContext('2d');
+            c && c.drawImage(bitmap,0,0);
+            const dict = {
+                src: img,
+                canvas
+            }
+            this.imageDatas = this.imageDatas ? [...this.imageDatas,dict] : [dict];
+        }
+    }
 }
+
 function isNotEmpty<T>(value?: T): value is T {
     return !!value;
 }
